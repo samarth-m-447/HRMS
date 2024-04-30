@@ -1,0 +1,658 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace = "com.scii.mapper.EmployeeMapper">
+   <resultMap id="EmployeeId" type="com.scii.model.Employee"></resultMap>
+   <resultMap id="RoleId" type="com.scii.model.Role"></resultMap>
+		
+	<select id="authUser" parameterType="com.scii.model.Employee" resultMap="EmployeeId">
+	  select
+		 a.EMP_ID
+		 , a.EMP_NAME
+		 , a.ROLE_ID
+		 , a.PASSWORD
+		 , a.USER_LOCK_FLG
+		 , a.OFFICE_EMAIL
+		 , a.LOGIN_FAIL_ATTEMPTS
+		 , a.ACTIVE_FLG
+		 , a.FIRST_LOGIN_FLG
+		 , a.EMP_TYPE
+		 , a.EMP_LEVEL
+		 , a.OFFICE_EMAIL_365
+		 , b.DESG_NAME
+		from
+		    M_EMPLOYEE a
+		inner join
+			M_DESIGNATION b
+		on
+			a.DESG_ID = b.DESG_ID
+		and
+			b.ACTIVE_FLG = '1'
+		where
+		    a.EMP_ID = #{emp_id}
+		<if test="password != null and password != ''">
+			and a.PASSWORD = #{password}
+		</if>
+		and 
+			a.ACTIVE_FLG = '1'
+	</select>
+	
+	<!-- get role details from M_ROLE --> 
+	<select id="getAllRole" resultMap="RoleId">
+	  select 
+	      ROLE_ID
+	     ,ROLE_NAME
+	   from 
+	     M_ROLE
+	</select>
+	
+	<select id="getAllEmployees" resultMap="EmployeeId">
+	 select
+	    a.EMP_ID
+	    , a.EMP_NAME
+	    , a.password
+	    , a.OFFICE_EMAIL
+	    , a.OFFICE_EMAIL_365
+	    , a.CONTACT_NUMBER
+	    , a.EMP_TYPE
+	    , a.EMP_LEVEL
+	    , a.EMP_JOINED_DATE
+	    , a.ACTIVE_FLG
+	    , a.EMP_IMAGE_PATH
+	    , a.PTMS_ADMIN_FLG
+	    , a.USER_LOCK_FLG
+	    , a.LOGIN_FAIL_ATTEMPTS
+	    , b.ROLE_ID
+	    , b.ROLE_NAME
+	    , c.DEPT_ID
+	    , c.DEPT_NAME
+	    , d.DESG_NAME
+	    , d.DESG_ID 
+	    , e.REPORTING_LEADER_ID
+	from
+	    M_EMPLOYEE a 
+	    inner join M_ROLE b 
+	        on a.ROLE_ID = b.ROLE_ID 
+	    left outer join M_DESIGNATION d 
+	        on a.desg_id = d.desg_id 
+	        and d.active_flg = '1'
+	    left outer join M_DEPARTMENT c 
+	        on a.dept_id = c.dept_id 
+	     and c.active_flg = '1'
+	     left outer join R_EMP_LEADER e
+	     	on a.EMP_ID = e.EMP_ID 
+	ORDER BY
+	    a.EMP_ID	 
+	</select>
+	
+	<!-- get all Employee ID  -->
+	<select id="getAllEmployeeId" resultType="java.lang.String" parameterType="java.lang.String">
+	  select 
+	     EMP_ID
+        from 
+         M_EMPLOYEE
+       where
+       	EMP_ID = #{emp_id};
+	</select>
+	
+	<!-- Employee to add new employee -->
+	<insert id="insertEmployee"  parameterType="com.scii.model.Employee">
+	insert
+	into
+	M_EMPLOYEE
+	( EMP_ID
+	, EMP_NAME
+	, OFFICE_EMAIL
+	, OFFICE_EMAIL_365
+	, CONTACT_NUMBER
+	, EMP_TYPE
+	, EMP_LEVEL
+	, EMP_JOINED_DATE
+	, DEPT_ID
+	, DESG_ID
+	, PASSWORD
+	, PW_UPDATE_TIME
+	, PW_RESET_FLG
+	, FIRST_LOGIN_FLG
+	, ACTIVE_FLG
+	, CREATED_BY
+	, CREATED_TIME
+	, UPDATED_BY
+	, UPDATED_TIME
+	, ROLE_ID
+	, EMP_IMAGE_PATH
+	, PTMS_ADMIN_FLG
+	, USER_LOCK_FLG
+	)
+	VALUES(
+	#{emp_id}
+	, UPPER(#{emp_name})
+	, #{office_email}
+	, #{office_email_365}
+	, #{contact_number}
+	, #{emp_type}
+	, #{emp_level}
+	, <choose>
+		<when test="emp_joined_date != null and emp_joined_date != ''">
+			to_date(#{emp_joined_date}, 'YYYY-MM-DD')
+		</when>
+		<otherwise>
+			NULL
+		</otherwise>
+	</choose>
+	, #{dept_id}
+	, #{desg_id}
+	, #{password}
+	, now()
+	, '0'
+	, '1'
+	, '1'
+	, #{created_by}
+	, now()
+	, #{updated_by}
+	, now()
+	, #{role_id}
+	, #{emp_image_path}
+	, '0'
+	, '0'
+	)
+	</insert>
+	
+	<!--  To add into r_emp_leader table -->
+	<insert id="insertToEmpLeader"  parameterType="com.scii.model.Employee">
+	    insert 
+			into 
+		R_EMP_LEADER
+		(
+			    EMP_ID 
+               , REPORTING_LEADER_ID 
+               , CREATED_BY
+               , CREATED_TIME 
+               , UPDATED_BY 
+               , UPDATED_TIME
+		)
+		VALUES(
+			   #{emp_id}
+               , #{reporting_leader_id}
+               , #{created_by}
+               , now()
+               , #{updated_by}
+               , now()
+			)
+	</insert>
+	
+	<!--  To update into r_emp_leader table -->
+	<update id="updateToEmpLeader"  parameterType="com.scii.model.Employee">
+	   update 
+			R_EMP_LEADER
+		set
+			  REPORTING_LEADER_ID = #{reporting_leader_id}
+			  , UPDATED_BY = #{updated_by}
+			 , UPDATED_TIME = now()
+		where	
+			  EMP_ID = #{emp_id}
+	</update>
+	
+	<!-- get Employee name by ID -->
+	<select id="getEmpNameById" resultType="java.lang.String" parameterType="java.lang.String">
+	    select
+			EMP_NAME
+		from
+			M_EMPLOYEE
+		where 
+		    EMP_ID = #{emp_id}
+	</select>
+	
+	<select id="findAllEmployeeForUpdatingLeaveEveryMonth" resultMap="EmployeeId">
+	 Select 
+	     *
+	   from 
+	      M_EMPLOYEE 
+	   where 
+	   ACTIVE_FLG = '1';
+	</select>
+	
+	<select id="getUsersByEmail" resultMap="EmployeeId" parameterType="com.scii.model.Employee">
+		select 
+			  a.EMP_ID
+			, a.EMP_NAME
+			, a.PASSWORD
+			, a.ROLE_ID
+			, b.ROLE_NAME
+			, a.ACTIVE_FLG
+		from
+			M_EMPLOYEE a
+		join
+			M_ROLE b
+		ON
+			a.ROLE_ID = b.role_id
+		where
+			a.EMP_ID = #{emp_id}
+	</select>
+	
+	<!-- check employee first login -->
+	<select id="checkIsFirstLogin" parameterType="com.scii.model.Employee" resultMap="EmployeeId">
+		select 
+			FIRST_LOGIN_FLG
+		from
+			M_EMPLOYEE
+		where
+			EMP_ID = #{emp_id}
+		and
+			ACTIVE_FLG = '1'
+	</select>
+	
+	<!-- get system date -->
+	<select id="getSystemDate" resultType="String">
+		select to_char(now(),'yyyy') 
+	</select>
+	
+	<!-- to update user reset password in M_EMPLOYE -->
+	<update id="resetUserPassword" parameterType="com.scii.model.Employee" >
+		update
+			M_EMPLOYEE
+		set
+			PASSWORD = #{password}
+			, FIRST_LOGIN_FLG = #{first_login_flg}
+			, PW_UPDATE_TIME = now()
+			, UPDATED_BY = #{updated_by}
+			, UPDATED_TIME = now()
+		where
+			EMP_ID = #{emp_id}
+		and
+			ACTIVE_FLG = '1'
+	</update>
+	
+	<!-- update PW_RESET_FLG  -->
+	<update id="deleteResetLinkDetails" parameterType="com.scii.model.Employee">
+		update 
+			M_EMPLOYEE
+		set
+			  PW_RESET_FLG = #{pw_reset_flg}
+			, UPDATED_BY = #{updated_by}
+			, UPDATED_TIME = now()
+		where
+			EMP_ID = #{emp_id}
+		and
+			ACTIVE_FLG = '1'
+	</update>
+	
+	<!-- get manager by role id -->
+	<select id="getManagerID" resultMap="EmployeeId" >
+		select
+             EMP_ID
+             ,EMP_NAME
+        from
+            M_EMPLOYEE
+        where
+			ROLE_ID = '1'
+		and 
+			ACTIVE_FLG = '1'
+		ORDER BY
+			EMP_ID
+	</select>
+	
+	<!--  Get loggedIn user Image path for Top navigation -->
+	<select id="employeeImagePath" resultMap="EmployeeId" >
+		select
+            EMP_IMAGE_PATH
+        from
+            M_EMPLOYEE
+		where 
+			EMP_ID = #{emp_id}
+	
+	</select>
+	
+	<!-- update imported employee's -->
+	<update id="updateEmployee"  parameterType="com.scii.model.Employee">
+	update M_EMPLOYEE
+			set
+	EMP_ID = #{emp_id}
+	,EMP_NAME = UPPER(#{emp_name})
+	,OFFICE_EMAIL = #{office_email}
+	,OFFICE_EMAIL_365 = #{office_email_365}
+	, CONTACT_NUMBER = #{contact_number}
+	, EMP_TYPE = #{emp_type}
+	, EMP_LEVEL = #{emp_level}
+	, EMP_JOINED_DATE =
+	<choose>
+		<when test="emp_joined_date != null and emp_joined_date != ''">
+			to_date(#{emp_joined_date}, 'YYYY-MM-DD')
+		</when>
+		<otherwise>
+			NULL
+		</otherwise>
+	</choose>
+	, DEPT_ID = #{dept_id}
+	, DESG_ID = #{desg_id}
+	, ACTIVE_FLG = '1'
+	, UPDATED_BY = #{updated_by}
+	, UPDATED_TIME = now()
+	, ROLE_ID = #{role_id}
+	, EMP_IMAGE_PATH = #{emp_image_path}
+	, PTMS_ADMIN_FLG = #{ptms_admin_flg}
+	, USER_LOCK_FLG = #{user_lock_flg}
+	where
+	EMP_ID = #{emp_id}
+	</update>
+
+	<!-- Delete Employee -->
+	<update id="deleteEmployee"
+		parameterType="com.scii.model.Employee">
+		update M_EMPLOYEE
+		set
+		ACTIVE_FLG = '0'
+		, updated_by = #{updated_by}
+		, updated_time = now()
+		where
+		EMP_ID = #{emp_id}
+	</update>
+	
+	<!-- Import Employee -->
+	<insert id="insertEmployeeFromImport" parameterType="java.util.ArrayList">
+		insert into M_EMPLOYEE(
+			  EMP_ID
+			, EMP_NAME
+			, OFFICE_EMAIL
+			, OFFICE_EMAIL_365
+			, CONTACT_NUMBER
+			, EMP_TYPE
+			, EMP_LEVEL
+			, EMP_JOINED_DATE
+			, DEPT_ID
+			, DESG_ID
+			, ROLE_ID
+			, EMP_IMAGE_PATH
+			, ACTIVE_FLG
+			, PASSWORD
+			, CREATED_BY
+			, CREATED_TIME
+			, UPDATED_BY
+			, UPDATED_TIME
+		) values 
+		<foreach collection="list" item="item" index="index" separator=",">
+		(
+			  #{item.emp_id}
+			, UPPER(#{item.emp_name})
+			, #{item.office_email}
+			, #{item.office_email_365}
+			, #{item.contact_number}
+        	, #{item.emp_type}
+        	, #{item.emp_level}
+			<if test="item.emp_joined_date != ''">
+                , to_date(#{item.emp_joined_date},'YYYY-MM-DD')
+            </if>
+            <if test="item.emp_joined_date == ''">
+                , null
+            </if>
+			, (SELECT DEPT_ID FROM M_DEPARTMENT WHERE UPPER(DEPT_NAME) = #{item.dept_name})
+			, (SELECT DESG_ID FROM M_DESIGNATION WHERE UPPER(DESG_NAME) = #{item.desg_name})
+			, ( SELECT ROLE_ID FROM M_ROLE WHERE UPPER(ROLE_NAME) = #{item.role_name})
+			, ''
+			, #{item.active_flg}
+			, #{item.password}
+			, #{item.created_by}
+			, now()
+			, #{item.updated_by}
+			, now()
+		)
+		</foreach>
+	</insert>
+	
+	<!-- Update Import Employee -->
+	<update id="updateEmployeeFromImport" parameterType="java.util.ArrayList">
+		<foreach collection="list" item="item" index="index" separator=";">
+			UPDATE 
+				M_EMPLOYEE
+			SET 
+				EMP_NAME = UPPER(#{item.emp_name})
+				, OFFICE_EMAIL = #{item.office_email}
+				, OFFICE_EMAIL_365 = #{item.office_email_365}
+				, CONTACT_NUMBER = #{item.contact_number}
+				, EMP_TYPE = #{item.emp_type}
+				, EMP_LEVEL = #{item.emp_level}
+				<if test="item.emp_joined_date != ''">
+                    , EMP_JOINED_DATE = to_date(#{item.emp_joined_date},'YYYY-MM-DD')
+                </if>
+                <if test="item.emp_joined_date == ''">
+                    , EMP_JOINED_DATE = null
+                </if>
+				, DEPT_ID = ( SELECT DEPT_ID FROM M_DEPARTMENT WHERE UPPER(DEPT_NAME) = #{item.dept_name} LIMIT 1)
+				, DESG_ID = ( SELECT DESG_ID FROM M_DESIGNATION WHERE UPPER(DESG_NAME) = #{item.desg_name} LIMIT 1)
+				, ROLE_ID = ( SELECT ROLE_ID FROM M_ROLE WHERE UPPER(ROLE_NAME) = #{item.role_name} LIMIT 1)
+				, ACTIVE_FLG = #{item.active_flg}
+				, UPDATED_TIME = now()
+				, UPDATED_BY = #{item.updated_by}
+			WHERE 
+				EMP_ID = #{item.emp_id}
+		</foreach>
+	</update>
+	
+	<select id="getEmpList" resultMap="EmployeeId" parameterType="com.scii.model.Employee">
+		select
+			 distinct EMP_ID
+		from
+			M_EMPLOYEE
+	
+	</select>
+	
+	<!-- Employee Image Path -->
+	<select id="getEmpImagePath" resultMap="EmployeeId" parameterType="com.scii.model.Employee">
+	  select 
+	      EMP_IMAGE_PATH
+	   from 
+	     M_EMPLOYEE
+	    WHERE
+	     EMP_ID =#{emp_id}
+	</select>
+	
+	<!-- get employee is active or not -->
+	<select id="getEmpActiveFlag" resultType="java.lang.String" parameterType="java.lang.String">
+	 Select 
+	     ACTIVE_FLG
+	   from 
+	      M_EMPLOYEE 
+	   where 
+	   	  EMP_ID = #{emp_id}
+	</select>
+	
+	<!-- check employee is first login or not -->
+	<select id="getEmpFirstLoginFlag" resultType="java.lang.String" parameterType="java.lang.String">
+	 Select 
+	     FIRST_LOGIN_FLG
+	   from 
+	      M_EMPLOYEE 
+	   where 
+	      EMP_ID = #{emp_id}
+	</select>
+	
+	<!-- Employee reset password -->
+	<update id="resetPassword" parameterType="com.scii.model.Employee" >
+		update
+			M_EMPLOYEE
+		set
+			PASSWORD = #{password}
+			, FIRST_LOGIN_FLG = #{first_login_flg}
+			, PW_UPDATE_TIME = now()
+			, UPDATED_BY = #{updated_by}
+			, UPDATED_TIME = now()
+		where
+			EMP_ID = #{emp_id}
+		and
+			ACTIVE_FLG = '1'
+	</update>
+	
+	<!-- Check Employee ID already exist -->
+	<select id="checkEmployeeIDExists" resultType="java.lang.String" parameterType="java.lang.String">
+	 Select 
+	     EMP_ID
+	   from 
+	      M_EMPLOYEE 
+	   where 
+	      EMP_ID = #{emp_id}
+	</select>
+	
+	<!-- get Employee Password -->
+	<select id="getEmployeePassword" resultType="java.lang.String" parameterType="java.lang.String">
+	 Select 
+	     PASSWORD
+	   from 
+	      M_EMPLOYEE 
+	   where 
+	   	  EMP_ID = #{emp_id}
+	</select>
+	
+	<!-- update Employee lock flag after attempt fail -->
+	<update id="updateEmployeeAfterAttemptsFail" parameterType="com.scii.model.Employee">
+		update
+			M_EMPLOYEE
+		set
+			 LOGIN_FAIL_ATTEMPTS = '0'
+			, USER_LOCK_FLG = #{user_lock_flg}
+			, UPDATED_TIME = now()
+		where
+			EMP_ID = #{emp_id}
+	</update>
+	
+	<select id="getData" resultMap="EmployeeId">
+	  select 
+	      *
+	   from 
+	     ptms.TBL_ROLE
+	</select>
+	
+	<!-- get login fail attempts of employee -->
+	<select id="getLoginAttempts" resultType="java.lang.String" parameterType="java.lang.String">
+	    select
+			login_fail_attempts
+		from
+			M_EMPLOYEE
+		where 
+		    EMP_ID = #{emp_id}
+	</select>
+	
+	<!-- update login fail attempts of employee -->
+	<update id="updateLoginAttempts" parameterType="com.scii.model.Employee">
+		update
+			M_EMPLOYEE
+		set
+			login_fail_attempts = #{login_fail_attempts}
+		where
+			EMP_ID = #{emp_id}
+	</update>
+	
+	<!-- get total employee's count -->
+	<select id="getEmployeeCount" resultType="java.lang.String" parameterType="java.lang.String">
+	    select
+			count(emp_id)
+		from
+			M_EMPLOYEE
+	</select>
+	
+	<!-- insert 051201 employee, if no employee's are inserted -->
+	<insert id="insertFirstEmployee"  parameterType="com.scii.model.Employee">
+		insert
+			into
+		M_EMPLOYEE
+			( EMP_ID
+			, EMP_NAME
+			, OFFICE_EMAIL
+			, OFFICE_EMAIL_365
+			, DESG_ID
+			, PASSWORD
+			, PW_UPDATE_TIME
+			, PW_RESET_FLG
+			, FIRST_LOGIN_FLG
+			, ACTIVE_FLG
+			, EMP_IMAGE_PATH
+			, EMP_TYPE
+			, CREATED_BY
+			, CREATED_TIME
+			, UPDATED_BY
+			, UPDATED_TIME
+			, ROLE_ID
+			, PTMS_ADMIN_FLG
+			)
+		VALUES(
+			#{emp_id}
+			, UPPER(#{emp_name})
+			, #{office_email}
+			, #{office_email_365}
+			, #{desg_id}
+			, #{password}
+			, now()
+			, '0'
+			, '0'
+			, '1'
+			, #{emp_image_path}
+			, #{emp_type}
+			, #{emp_id}
+			, now()
+			, #{emp_id}
+			, now()
+			, #{role_id}
+			, '0'
+			)
+	</insert>
+	
+	<update id="updateMailSentTimeAndFlag" parameterType="com.scii.model.Employee">
+		update 
+			M_EMPLOYEE
+		set
+			pw_reset_flg = #{pw_reset_flg}
+			, PW_UPDATE_TIME = now()
+			, UPDATED_BY = #{updated_by}
+			, UPDATED_TIME = now()
+		where
+			EMP_ID = #{emp_id}
+		and
+			LOWER(OFFICE_EMAIL) = LOWER(#{office_email})
+		and
+			ACTIVE_FLG = '1'
+	</update>
+	
+	<!-- set reset password link as valid for 24 hours -->
+	<select id="validateResetPasswordLink" resultMap="EmployeeId" parameterType="com.scii.model.Employee">
+		select
+			EMP_ID
+			, PW_RESET_FLG
+			, to_char(PW_UPDATE_TIME, 'YYYY-MM-DD HH24:MI:SS') PW_UPDATE_TIME
+		from
+			M_EMPLOYEE
+		where
+			EMP_ID = #{emp_id}
+		and
+			LOWER(OFFICE_EMAIL) = LOWER(#{office_email})
+		and 
+			ACTIVE_FLG = '1'
+	</select>
+	
+	<!-- get role name -->
+	<select id="getRoleName" resultMap="RoleId">
+	  select 
+	      ROLE_NAME
+	   from 
+	     M_ROLE
+	</select>
+	
+	<!-- check designation of employee is active -->
+	<select id="checkDesignationStatus" parameterType="com.scii.model.Employee" resultMap="EmployeeId">
+	  select
+		 EMP_ID
+		from
+		    M_EMPLOYEE
+		where
+		    DESG_ID = #{desg_id}
+		and ACTIVE_FLG = '1'
+	</select>
+	
+	<!-- get reporting leader of employee -->
+	<select id="checkEmpLeader" resultType="java.lang.String" parameterType="java.lang.String">
+	    select
+			EMP_ID
+		from
+			R_EMP_LEADER
+		where 
+		    EMP_ID = #{emp_id}
+	</select>
+	
+</mapper>

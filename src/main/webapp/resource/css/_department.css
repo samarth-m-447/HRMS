@@ -1,0 +1,52 @@
+#navbarNav{
+	margin-top: -5px;
+}
+
+#departmentForm{
+	margin-top: 0%;
+}
+#btnSaveProfile{
+	    margin-top: -3%;
+}
+
+@media ( max-width : 767px) {
+	.div-one {
+		margin-top: 0px !important;
+		margin-left: -165px;
+		width: 85px;
+	}
+	#home {
+		margin-top: -45px;
+		position: relative;
+		left: -90px;
+	}
+	#logout {
+    margin-top: -46px;
+    margin-right: -80px;
+    margin-left: 100px;
+}
+
+@media (max-width: 712px){
+#logout {
+    margin-top: -6px;
+}
+}
+@media (max-width: 480px){
+#date {
+    width: 40px!important;
+}
+.input-group-text {
+    width: 158px!important;
+}
+.btn-sm {
+    font-size: 0.8rem!important;
+}
+
+}
+@media (max-width: 320px){
+.input-group-text {
+    width: 121px!important;
+    font-size: 0.8rem;
+}
+
+}

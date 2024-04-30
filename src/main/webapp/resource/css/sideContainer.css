@@ -1,0 +1,152 @@
+.sidebar-menu {
+	position: fixed;
+	position: -webkit-sticky;
+	z-index: 1;
+	top: 0;
+	left: 0;
+	display: block;
+	width: 100%;
+}
+
+body:not(.layout-fixed ) .main-sidebar {
+	min-height: 700px;
+	position: absolute;
+	top: 0;
+}
+
+.sidebar-collapse #apacheSearchHome {
+	margin-left: -26px !important;
+}
+
+.iddiv {
+	margin-top: -8px !important;
+	position: absolute;
+	margin-left: -90px;
+	float: right;
+	right: 210px;
+}
+
+.iddiv1 {
+	position: absolute;
+	float: right;
+	right: 10px;
+	margin-top: -4px !important;
+}
+
+.textdiv1:hover {
+	display: inline-block;
+	position: relative;
+	animation: 2s linear 0s animate;
+	animation-direction: reverse;
+	word-wrap: break-word;
+	z-index: 0;
+	overflow: visible;
+	animation-fill-mode: forwards;
+}
+
+@keyframes animate { 
+	0% {
+		transform: translateX(-20%);
+	}
+	100%{
+	transform:translateX(0%);
+	}
+}
+.cataegoryList {
+	text-overflow: ellipsis !important;
+	display: block !important;
+	width: 100%;
+}
+
+.nav-sidebar .nav-link p {
+	white-space: nowrap !important;
+	/* display:inline-block!important; */
+}
+
+/* .sidebar-collapse .cataegoryList {
+	padding-left: 66px !important;
+}
+ */
+/* .main-sidebar:not (.sidebar-no-expand ):hover .cataegoryList {
+	padding-left: 45px !important;
+} */
+.course_avaiable_0 {
+	cursor: default;
+}
+
+.course_avaiable_1 {
+	cursor: pointer;
+}
+
+.maintainceheight {
+	height: 3px;
+}
+
+ul li a:hover {
+	color: #ffffff;
+	text-shadow: 0 0 5px #ffffff;
+}
+
+#logout:hover {
+	color: #ffffff;
+	text-shadow: 0 0 5px #ffffff;
+}
+
+.emp-image-circle {
+	margin-top: -12px;
+	margin-right: 10px;
+	width: 50px;
+	height: 50px;
+	border-radius: 50%;
+	cursor:auto;
+}
+
+.emp-image-circle:hover {
+	margin-top: -12px;
+	border-radius: 7px;
+	-ms-transform: scale(1.1);
+	-webkit-transform: scale(1.1); /* Safari 3-8 */
+	transform: scale(1.1);
+	cursor:auto;
+}
+
+.cursorAuto{
+	cursor:auto;
+}
+
+.sideBarAppImage{
+	opacity: 9.8; 
+	margin-left: 15px; 
+	margin-right: 0px;
+}
+
+.border-b-0 {
+	border-bottom: 0px!important;
+}
+
+.sideNavIcon{
+	width:40px;
+	text-align:center;
+}
+.sidebar-collapse .sideNavText{
+	visibility:hidden;
+}
+.sidebar:hover .sideNavText, .main-sidebar:hover .sideNavText{
+	visibility:visible;
+}
+.secondLevelNav{
+	padding-left: 45px; 
+	margin-left: 0px;
+}
+.secondLevelNavIcon{
+	width:20px;
+	text-align:center;
+	color: #9fb7df;
+}
+
+.management-one{
+	margin-left:30px;
+}
+a{
+	color:inherit;
+}

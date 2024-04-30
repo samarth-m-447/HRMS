@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace = "com.scii.mapper.InsertAttendanceMapper">
+
+	<resultMap id="AttendanceModelId" type="com.scii.model.Attendance"></resultMap>
+	<resultMap id="AttendanceOutgoingModelId" type="com.scii.model.AttendanceOutgoing"></resultMap>
+	
+	<!-- insert attendance from excel file to database -->
+	<insert id="insertAttendance" parameterType="java.util.ArrayList">
+		insert 
+			into 
+		T_ATTENDANCE_DETAILS
+		(
+			EMP_ID
+			, PUNCH_DATE
+			, PUNCH_IN_TIME
+			, PUNCH_OUT_TIME
+			, LATE_COMING
+			, EARLY_LEAVING
+			, WORKING_HOURS
+			, OUT_GOING_FLG
+			, MGR_APPROVED_FLG
+			, BACKOFFICE_PERSON_APPROVED_FLG
+			, CREATED_BY
+			, CREATED_TIME
+			, UPDATED_BY
+			, UPDATED_TIME
+		)
+		VALUES
+			<foreach collection="list" item="item" index="index" separator=",">
+			(
+				#{item.emp_id}
+				,TO_DATE(#{item.punch_date}, 'YYYY-MM-DD')
+				,#{item.punch_in_time}
+				,#{item.punch_out_time}
+				,#{item.late_coming}
+				,#{item.early_leaving}
+				,#{item.working_hours}
+				,#{item.out_going_flg}
+				,#{item.mgr_approved_flg}
+				,#{item.backoffice_person_approved_flg}
+				,'admin'
+				,now()
+				,'admin'
+				,now()
+			)
+			</foreach>
+	</insert>
+		
+	<!-- get all Employee's attendance details -->
+	<select id="findAttendances" resultMap="AttendanceModelId" parameterType="com.scii.model.Attendance">
+		select
+			a.EMP_ID
+	        ,to_char(a.PUNCH_DATE,'YYYY-MM-DD') PUNCH_DATE 
+	        ,a.PUNCH_IN_TIME
+			,a.PUNCH_OUT_TIME 
+			,a.WORKING_HOURS
+			,b.emp_name
+			,b.role_id
+			,a.OUT_GOING_FLG
+		from
+			T_ATTENDANCE_DETAILS a
+		inner join M_EMPLOYEE b 
+		  on 
+		  b.EMP_ID = a.EMP_ID
+		  and 
+		  b.ACTIVE_FLG='1'
+		where 
+		  a.PUNCH_DATE =TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+		<if test="role_id == 2">
+			and	
+			a.EMP_ID = #{emp_id}
+		</if>
+		<if test="role_id == 1 and myAttendanceCheckBox == true">
+			and	
+			a.EMP_ID = #{emp_id}
+		</if>
+		order by 
+		  a.EMP_ID
+		  ,a.PUNCH_DATE
+	</select>
+	
+	<!-- get employee punch in time from T_ATTENDANCE_DETAILS table -->
+	<select id="getPunchInTime" parameterType="com.scii.model.Attendance" resultType="string">
+		select
+			PUNCH_IN_TIME
+		from
+			T_ATTENDANCE_DETAILS
+		where
+			EMP_ID = #{emp_id}
+		and 
+			PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+	</select>
+	
+	<!-- get employee punch out time from T_ATTENDANCE_DETAILS table -->
+	<select id="getPunchOutTime" parameterType="com.scii.model.Attendance" resultType="string">
+		select
+			PUNCH_OUT_TIME
+		from
+			T_ATTENDANCE_DETAILS
+		where
+			EMP_ID = #{emp_id}
+		and PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+	</select>
+	
+	<!-- check for duplicate punch date in attendance -->
+	<select id="checkDuplicateAttendance" parameterType="java.util.ArrayList" resultType="integer">
+			select
+				count(*)
+			from
+				T_ATTENDANCE_DETAILS
+			where
+				PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+	</select>
+	
+	<!-- delete duplicate punch date data from T_ATTENDANCE_OUTGOING_DETAILS -->
+	<delete id = "deleteDuplicateAttendance" parameterType="java.util.ArrayList">
+		DELETE 
+		from 
+			T_ATTENDANCE_DETAILS 
+		where
+			<foreach collection="list" item="item" index="index" separator=",">
+					EMP_ID = #{item.emp_id}
+				and 
+					PUNCH_DATE = TO_DATE(#{item.punch_date}, 'YYYY-MM-DD')
+			</foreach>
+	</delete>
+	
+	<!-- update employee attendance from excel file -->
+	<update id="updateAttendance" parameterType="java.util.ArrayList">
+		<foreach collection="list" item="item" index="index" separator=";">
+			update
+				T_ATTENDANCE_DETAILS		
+				set
+					
+						EMP_ID = #{item.emp_id}
+						, PUNCH_DATE = TO_DATE(#{item.punch_date}, 'YYYY-MM-DD')
+						, PUNCH_IN_TIME = #{item.punch_in_time}
+						, PUNCH_OUT_TIME = #{item.punch_out_time}
+						, LATE_COMING = #{item.late_coming}
+						, EARLY_LEAVING = #{item.early_leaving}
+						, UPDATED_TIME = now()	
+				where
+						EMP_ID = #{item.emp_id}
+				and
+						PUNCH_DATE = TO_DATE(#{item.punch_date}, 'YYYY-MM-DD')
+		</foreach>
+			
+	</update>
+	
+	<!-- insert outgoing details to T_ATTENDANCE_OUTGOING_DETAILS -->
+	<insert id="insertOutgoingAttendanceDetails" parameterType="com.scii.model.AttendanceOutgoing">
+		insert 
+			into 
+		T_ATTENDANCE_OUTGOING_DETAILS
+		(
+			EMP_ID
+			, PUNCH_DATE
+			, OUT_GOING_FROM_TIME
+			, OUT_GOING_IN_TIME
+			, CREATED_BY
+			, CREATED_TIME
+			, UPDATED_BY
+			, UPDATED_TIME
+		)
+		VALUES
+			(
+				#{emp_id}
+				,TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+				,#{out_going_from_time}
+				,#{out_going_in_time}
+				,#{emp_id}
+				,now()
+				,#{emp_id}
+				,now()
+			)
+	</insert>
+	
+	<!-- Delete from Attendance Table Data for Selected Date -->
+	<delete id="deleteAttendanceDetails" parameterType="String">
+		DELETE
+		FROM 
+			T_ATTENDANCE_DETAILS
+		where
+			PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+	</delete>
+	
+	<!-- Display Outgoing Details -->
+	<select id="getOutgoingAttendanceList" resultMap="AttendanceOutgoingModelId" parameterType="java.lang.String">
+	  select
+			a.EMP_ID
+		   <!-- ,to_char(PUNCH_DATE,'YYYY-MM-DD') PUNCH_DATE -->
+		   , b.EMP_NAME
+		   , a.PUNCH_DATE
+		   , a.OUT_GOING_FROM_TIME
+		   , a.OUT_GOING_IN_TIME
+		from
+			T_ATTENDANCE_OUTGOING_DETAILS a
+		inner join
+			M_EMPLOYEE b
+		on
+			a.EMP_ID = b.EMP_ID
+		and 
+		  b.ACTIVE_FLG='1'
+		where
+			a.PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+		and
+			a.ACTIVE_FLG='1'
+		<if test="role_id == 2">
+			and	
+			a.EMP_ID = #{emp_id}
+		</if>
+		<if test="role_id == 1 and myAttendanceCheckBox == true">
+			and	
+			a.EMP_ID = #{emp_id}
+		</if>
+		order by 
+		  a.EMP_ID
+		  ,a.PUNCH_DATE
+	</select>
+	
+	<!--  get employee's outgoing FROM and IN time  -->
+	<select id="getOutgoinDetails" resultMap="AttendanceOutgoingModelId" parameterType="java.lang.String">
+	  select
+			OUT_GOING_FROM_TIME
+			, OUT_GOING_IN_TIME
+		from
+			T_ATTENDANCE_OUTGOING_DETAILS
+		where
+			PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+		and
+			EMP_ID = #{emp_id}
+		and
+			ACTIVE_FLG = '1'		
+	</select>
+	
+	<!--  To add into t_attendance_outgoing_details table -->
+	<insert id="insertToAttendanceOutgoingDetails"  parameterType="com.scii.model.AttendanceOutgoing">
+	    insert 
+			into 
+		T_ATTENDANCE_OUTGOING_DETAILS
+		(
+			    EMP_ID 
+               , PUNCH_DATE 
+               , OUT_GOING_FROM_TIME
+               , OUT_GOING_IN_TIME 
+               , CREATED_BY
+               , CREATED_TIME
+               , UPDATED_BY 
+               , UPDATED_TIME
+		)
+		VALUES(
+			   #{emp_id}
+               , TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+               , #{out_going_from_time}
+               , #{out_going_in_time}
+               , #{created_by}
+               , now()
+               , #{updated_by}
+               , now()
+			)
+	</insert>
+	
+	<!-- Delete Attendance Outgoing details -->
+	<update id="deleteAttendanceOutgoingDetails" parameterType="com.scii.model.Employee">
+		update 
+			T_ATTENDANCE_OUTGOING_DETAILS
+		set
+			ACTIVE_FLG = '0'
+			, updated_by = #{updated_by}
+			, updated_time = now()
+		where
+			EMP_ID = #{emp_id}
+		and
+			PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+		and
+			OUT_GOING_FROM_TIME = #{out_going_from_time}
+		and
+			OUT_GOING_IN_TIME = #{out_going_in_time}
+	</update>
+	
+	<!-- get employee's outgoing attendance details  -->
+	<select id="getOutgoingAttendance" resultMap="AttendanceOutgoingModelId" parameterType="java.lang.String">
+	  select
+			a.EMP_ID
+		   , b.EMP_NAME
+		   , a.PUNCH_DATE
+		   , a.OUT_GOING_FROM_TIME
+		   , a.OUT_GOING_IN_TIME
+		from
+			T_ATTENDANCE_OUTGOING_DETAILS a
+		inner join
+			M_EMPLOYEE b
+		on
+			a.EMP_ID = b.EMP_ID
+		and 
+		  	b.ACTIVE_FLG='1'		
+		where
+			a.PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+		and
+			a.ACTIVE_FLG='1'
+		and	
+			a.EMP_ID = #{emp_id}
+		order by 
+		  a.EMP_ID
+		  ,a.PUNCH_DATE		
+	</select>
+	
+	<!-- update OUT_GOING_FLG in T_ATTENDANCE_DETAILS -->
+	<update id="updateEmployeAttendance" parameterType="com.scii.model.Attendance">
+		update 
+			T_ATTENDANCE_DETAILS
+		set
+			  OUT_GOING_FLG = #{out_going_flg}
+			, UPDATED_BY = #{emp_id}
+			, UPDATED_TIME = now()
+		where
+			EMP_ID = #{emp_id}
+		and
+			PUNCH_DATE = TO_DATE(#{punch_date},'YYYY-MM-DD')
+	</update>
+	
+	<!-- get outgoing from details from T_ATTENDANCE_OUTGOING_DETAILS -->
+	<select id="getoutgoingFrom" parameterType="com.scii.model.AttendanceOutgoing" resultType="string">
+		SELECT 
+			OUT_GOING_FROM_TIME
+		FROM 
+			T_ATTENDANCE_OUTGOING_DETAILS
+		WHERE 
+			EMP_ID = #{emp_id}
+		and
+			PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+		and
+			OUT_GOING_FROM_TIME = #{out_going_from_time}
+		and 
+			ACTIVE_FLG = '1'
+	</select>
+	
+	<!-- get outgoing in details from T_ATTENDANCE_OUTGOING_DETAILS -->
+	<select id="getoutgoingIn" parameterType="com.scii.model.AttendanceOutgoing" resultType="string">
+		SELECT 
+			OUT_GOING_IN_TIME
+		FROM 
+			T_ATTENDANCE_OUTGOING_DETAILS
+		WHERE 
+			EMP_ID = #{emp_id}
+		and
+			PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+		and
+			OUT_GOING_IN_TIME = #{out_going_in_time}
+		and 
+			ACTIVE_FLG = '1'
+	</select>
+	
+	<!-- get employee's active outgoing flag count -->
+	<select id="getEmployeeOutgoingActive" parameterType="java.util.ArrayList" resultType="integer">
+		SELECT
+			count(EMP_ID)
+		FROM
+			T_ATTENDANCE_OUTGOING_DETAILS 
+		WHERE 
+         	EMP_ID = #{emp_id}
+        and
+         	PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+        and
+         	ACTIVE_FLG = '1'
+	</select>
+	
+	<!-- Get latest Outgoing In details of Employee -->
+	<select id="getexistingOutgoingDetails" parameterType="com.scii.model.AttendanceOutgoing" resultType="string">
+		 SELECT
+			MAX(OUT_GOING_IN_TIME)
+		FROM
+			T_ATTENDANCE_OUTGOING_DETAILS 
+		WHERE 
+         	EMP_ID = #{emp_id}
+        and
+         	PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+        and
+         	ACTIVE_FLG = '1'
+	</select>
+	
+	<!-- Get Outgoing From details of Employee -->
+	<select id="getoutgoingFromList" parameterType="com.scii.model.AttendanceOutgoing" resultMap="AttendanceOutgoingModelId">
+		SELECT 
+			OUT_GOING_FROM_TIME
+		FROM 
+			T_ATTENDANCE_OUTGOING_DETAILS
+		WHERE 
+			EMP_ID = #{emp_id}
+		and
+			PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+		and 
+			ACTIVE_FLG = '1'
+	</select>
+	
+	<!-- Get Outgoing In details of Employee -->
+	<select id="getoutgoingInList" parameterType="com.scii.model.AttendanceOutgoing" resultMap="AttendanceOutgoingModelId">
+		SELECT 
+			OUT_GOING_IN_TIME
+		FROM 
+			T_ATTENDANCE_OUTGOING_DETAILS
+		WHERE 
+			EMP_ID = #{emp_id}
+		and
+			PUNCH_DATE = TO_DATE(#{punch_date}, 'YYYY-MM-DD')
+		and 
+			ACTIVE_FLG = '1'
+	</select>
+	
+	<!-- update Working hours in T_ATTENDANCE_DETAILS -->
+	<update id="updateEmployeAttendanceHours" parameterType="com.scii.model.Attendance">
+		update 
+			T_ATTENDANCE_DETAILS
+		set
+			  WORKING_HOURS = #{working_hours}
+			, UPDATED_BY = #{emp_id}
+			, UPDATED_TIME = now()
+		where
+			EMP_ID = #{emp_id}
+		and
+			PUNCH_DATE = TO_DATE(#{punch_date},'YYYY-MM-DD')
+	</update>
+	
+</mapper>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mail-template>
+	<forgot-password-link>
+		<![CDATA[
+			<html>
+				<body>
+					Hello $userName$ ,<br><br>
+					You have requested to change the Login Password.<br>
+					Please click the below link to change your Login Password.<br><br>
+					<a href="$resetPasswordLink$">$url$</a><br><br>
+					<b>Note :</b> Above Link is valid once and is valid for 24 hours.<br><br>
+					If you have not requested for Password change, please ignore this mail.<br><br>
+					<p style="font-size:14px;color:red;">This is a system generated mail. Please do not reply to this mail.</p><br>
+					Thanks & Regards,<br>
+					Human Resource Management System
+				</body>
+			</html>
+		]]>
+	</forgot-password-link>
+</mail-template>

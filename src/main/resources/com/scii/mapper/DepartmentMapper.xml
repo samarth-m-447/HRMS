@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.scii.mapper.DepartmentMapper">
+	
+	<resultMap id="DepartmentModelId"  type="com.scii.model.Department"></resultMap>
+	<resultMap id="EmployeeModelId"  type="com.scii.model.Employee"></resultMap>
+	
+	<select id="getAllDepartment" resultMap="DepartmentModelId">
+		Select 
+		   *
+		  From 
+		  m_department
+		where
+			active_flg = '1'
+		  order by dept_id
+	</select>
+	
+	<select id="getDepartments" resultMap="DepartmentModelId" >
+		select
+		*
+		from m_department
+		order by dept_id
+	</select>
+	
+	<select id="getManagerID" resultMap="EmployeeModelId" parameterType="com.scii.model.Employee">
+		select
+			 EMP_ID,
+			 REPORTING_LEADER_ID
+		from
+			M_EMPLOYEE
+		where  
+			ROLE_ID = '1'
+	</select>
+	
+	<!-- Import Department -->
+	<insert id="insertDepartments" parameterType="java.util.ArrayList">
+		insert into M_DEPARTMENT(
+			  DEPT_ID
+			, DEPT_NAME
+			, ACTIVE_FLG
+			, CREATED_BY
+			, CREATED_TIME
+			, UPDATED_BY
+			, UPDATED_TIME
+		) values 
+		<foreach collection="list" item="item" index="index" separator=",">
+		(
+			  #{item.dept_id}
+			, UPPER(#{item.dept_name})
+			, #{item.active_flg}
+			, #{item.created_by}
+			, now()
+			, #{item.updated_by}
+			, now()
+		)
+		</foreach>
+	</insert>
+	
+	<select id="getDeptList" resultMap="DepartmentModelId" parameterType="com.scii.model.Department">
+		select
+			 distinct dept_id
+		from
+			M_DEPARTMENT
+	</select>
+	
+	<!-- Update Import Department -->
+	<update id="updateDepartmentFromImport" parameterType="java.util.ArrayList">
+		<foreach collection="list" item="item" index="index" separator=";">
+			UPDATE 
+				M_DEPARTMENT
+			SET 
+				DEPT_NAME = UPPER(#{item.dept_name})
+				, ACTIVE_FLG = #{item.active_flg}
+				, UPDATED_TIME = now()
+				, UPDATED_BY = #{item.updated_by}
+			WHERE 
+				DEPT_ID = #{item.dept_id}
+		</foreach>
+	</update>
+	
+	<!-- check department already exist-->
+	<select id="checkDepartmentIDExists" resultType="java.lang.String" parameterType="java.lang.String">
+	 Select 
+	     DEPT_ID
+	   from 
+	      M_DEPARTMENT
+	   where 
+	      DEPT_ID = #{dept_id}
+	</select>
+	
+	<select id="getDepartmentName" resultMap="DepartmentModelId">
+		Select 
+		   dept_name
+		From 
+		   m_department
+		where
+		   active_flg = '1'
+	</select>
+	
+</mapper>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.scii.mapper.HolidayMapper">
+	
+	<resultMap id="HolidayID"  type="com.scii.model.Holiday"></resultMap>
+	
+	<!-- get holiday table data -->
+	<select id="getAllHolidayMasterDetails" resultMap="HolidayID" parameterType="com.scii.model.Holiday">
+		select 
+		   HOLIDAY_DATE
+		  ,HOLIDAY_NAME
+		  ,ACTIVE_FLG
+		 From 
+		 	M_HOLIDAY
+		 WHERE
+		   EXTRACT(YEAR FROM HOLIDAY_DATE) = CAST(#{year} AS double precision)
+		  ORDER BY
+		  	HOLIDAY_DATE
+	</select>
+	
+	<!-- insert import Holidays -->
+	<insert id="insertHolidays" parameterType="java.util.ArrayList">
+		insert into M_HOLIDAY(
+			 HOLIDAY_DATE
+			, HOLIDAY_NAME
+			, ACTIVE_FLG
+			, CREATED_BY
+			, CREATED_TIME
+			, UPDATED_BY
+			, UPDATED_TIME
+		) values 
+		<foreach collection="list" item="item" index="index" separator=",">
+		(
+			  to_date(#{item.holiday_date},'YYYY/MM/DD')
+			, UPPER(#{item.holiday_name})
+			, #{item.active_flg}
+			, #{item.created_by}
+			, now()
+			, #{item.updated_by}
+			, now()
+		)
+		</foreach>
+	</insert>
+	
+	<!-- get distinct holiday date -->
+	<select id="getHolidayList" resultMap="HolidayID" parameterType="com.scii.model.Holiday">
+		select
+			 distinct holiday_date
+		from
+			M_HOLIDAY
+	
+	</select>
+	
+	<!-- Update Import Holiday -->
+	<update id="updateHolidayFromImport" parameterType="java.util.ArrayList">
+		<foreach collection="list" item="item" index="index" separator=";">
+			UPDATE 
+				M_HOLIDAY
+			SET 
+				 HOLIDAY_NAME = UPPER(#{item.holiday_name})
+				, ACTIVE_FLG = #{item.active_flg}
+				, UPDATED_TIME = now()
+				, UPDATED_BY = #{item.updated_by}
+			WHERE 
+				HOLIDAY_DATE = to_date(#{item.holiday_date},'YYYY/MM/DD')
+		</foreach>
+	</update>
+	
+	<!-- Check holiday date already exist -->
+	<select id="checkHolidayIDExists" resultType="java.lang.String" parameterType="java.lang.String">
+	 Select 
+	     HOLIDAY_DATE
+	   from 
+	      M_HOLIDAY
+	   where 
+	      HOLIDAY_DATE =  to_date(#{holiday_date},'YYYY/MM/DD')
+	</select>
+</mapper>

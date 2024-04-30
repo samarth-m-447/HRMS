@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.scii.mapper.DesignationMapper">
+
+	<resultMap id="DesignationId"  type="com.scii.model.Designation"></resultMap>
+
+	<select id="getDesignation" resultMap="DesignationId">
+		select
+			*
+		from 
+			m_designation
+	    order by 
+	    	desg_id
+	</select>
+	
+	<!-- get active designations -->
+	<select id="getActiveDesignation" resultMap="DesignationId">
+		select
+			*
+		from 
+		  m_designation
+		 where
+			active_flg = '1'
+		  order by
+	    	desg_id
+	</select>
+	
+	<!-- Delete Designation -->
+	<update id="deleteDesignation"
+		parameterType="com.scii.model.Designation">
+		update M_DESIGNATION
+		set
+		ACTIVE_FLG = '0'
+		, updated_by = #{updated_by}
+		, updated_time = now()
+		where
+		DESG_ID = #{desg_id}
+	</update>
+	
+	<!-- Insert Import Designation -->
+	<insert id="insertDesignations" parameterType="java.util.ArrayList">
+		insert into M_DESIGNATION(
+			  DESG_ID
+			, DESG_NAME
+			, ACTIVE_FLG
+			, CREATED_BY
+			, CREATED_TIME
+			, UPDATED_BY
+			, UPDATED_TIME
+		) values 
+		<foreach collection="list" item="item" index="index" separator=",">
+		(
+			  #{item.desg_id}
+			, UPPER(#{item.desg_name})
+			, #{item.active_flg}
+			, #{item.created_by}
+			, now()
+			, #{item.updated_by}
+			, now()
+		)
+		</foreach>
+	</insert>
+	
+	<select id="getDesgList" resultMap="DesignationId" parameterType="com.scii.model.Designation">
+		select
+			 distinct desg_id
+		from
+			M_DESIGNATION
+	
+	</select>
+	
+	<!-- Update Import Designation -->
+	<update id="updateDesignationFromImport" parameterType="java.util.ArrayList">
+		<foreach collection="list" item="item" index="index" separator=";">
+			UPDATE 
+				M_DESIGNATION
+			SET 
+				DESG_NAME = UPPER(#{item.desg_name})
+				, ACTIVE_FLG = #{item.active_flg}
+				, UPDATED_TIME = now()
+				, UPDATED_BY = #{item.updated_by}
+			WHERE 
+				DESG_ID = #{item.desg_id}
+		</foreach>
+	</update>
+	
+	<!-- Check Designation already exist-->
+	<select id="checkDesignationIDExists" resultType="java.lang.String" parameterType="java.lang.String">
+	 Select 
+	     DESG_ID
+	   from 
+	      M_DESIGNATION
+	   where 
+	      DESG_ID = #{desg_id}
+	</select>
+	
+	<!-- get designation name-->
+	<select id="getDesignationName" resultMap="DesignationId">
+		Select 
+		   desg_name
+		  From 
+		  m_designation
+		where
+			active_flg = '1'
+	</select>
+	
+</mapper>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.scii.mapper.LeaveMasterMapper">
+	
+	<resultMap id="Leave"  type="com.scii.model.Leave"></resultMap>
+	
+	<!-- get all types of leaves details -->
+	<select id="getAllLeaveMasterDetails" resultMap="Leave">
+		Select 
+		   leave_id
+		   ,leave_type_code
+		   ,leave_type_name
+		   ,active_flg
+		From 
+		  m_leave
+		order by 
+		   leave_id
+	</select>
+	
+	
+	<!-- insert import Leave -->
+	<insert id="insertLeaves" parameterType="java.util.ArrayList">
+		insert into M_LEAVE(
+			  LEAVE_ID
+			, LEAVE_TYPE_NAME
+			, ACTIVE_FLG
+			, CREATED_BY
+			, CREATED_TIME
+			, UPDATED_BY
+			, UPDATED_TIME
+			, LEAVE_TYPE_CODE
+		) values 
+		<foreach collection="list" item="item" index="index" separator=",">
+		(
+			  #{item.leave_id}
+			, UPPER(#{item.leave_type_name})
+			, #{item.active_flg}
+			, #{item.created_by}
+			, now()
+			, #{item.updated_by}
+			, now()
+			, UPPER(#{item.leave_type_code})
+		)
+		</foreach>
+	</insert>
+	
+	<!--  get leave ID -->
+	<select id="getLeaveList" resultMap="Leave" parameterType="com.scii.model.Leave">
+		select
+			 distinct leave_id
+		from
+			M_LEAVE
+	</select>
+
+	<!-- Update Import Designation -->
+	<update id="updateLeaveFromImport" parameterType="java.util.ArrayList">
+		<foreach collection="list" item="item" index="index" separator=";">
+			UPDATE 
+				M_LEAVE
+			SET 
+				LEAVE_TYPE_CODE = UPPER(#{item.leave_type_code})
+				, LEAVE_TYPE_NAME = UPPER(#{item.leave_type_name})
+				, ACTIVE_FLG = #{item.active_flg}
+				, UPDATED_TIME = now()
+				, UPDATED_BY = #{item.updated_by}
+			WHERE 
+				LEAVE_ID = #{item.leave_id}
+		</foreach>
+	</update>
+	
+	<!-- check leave ID already exist -->
+	<select id="checkLeaveIDExists" resultType="java.lang.String" parameterType="com.scii.model.Leave">
+	 Select 
+	     LEAVE_ID
+	   from 
+	      M_LEAVE
+	   where 
+	         LEAVE_ID = #{leave_id}
+	</select>
+	
+	<!-- check leave code already exist -->
+	<select id="checkLeaveCodeExists" resultType="java.lang.String" parameterType="com.scii.model.Leave">
+	 Select 
+	     LEAVE_TYPE_CODE
+	   from 
+	      M_LEAVE
+	   where 
+	         LEAVE_TYPE_CODE = #{leave_type_code} 
+	</select>
+	
+	<!-- check leave name already exist -->
+	<select id="checkLeaveNameExists" resultType="java.lang.String" parameterType="com.scii.model.Leave">
+	 Select 
+	     LEAVE_TYPE_NAME
+	   from 
+	      M_LEAVE
+	   where 
+	         LEAVE_TYPE_NAME = #{leave_type_name}
+	</select>
+	
+</mapper>
